@@ -5,6 +5,10 @@ directories:
   buildResources: resources
 win:
   icon: resources/icon.ico
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  perMachine: false
 files:
   - out/**/*
   - package.json
