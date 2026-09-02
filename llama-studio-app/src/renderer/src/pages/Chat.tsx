@@ -358,7 +358,7 @@ export default function Chat() {
 
         {/* 输入框容器 — 上行 textarea,下行工具栏 */}
         <div
-          className="rounded-[20px] border border-[rgba(0,0,0,0.10)] bg-white overflow-hidden"
+          className="rounded-[20px] border border-[var(--c-border)] bg-[var(--c-input)] overflow-hidden"
           style={{
             boxShadow:
               '0 4px 24px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04)',
@@ -385,7 +385,7 @@ export default function Chat() {
               onAdd={(list) =>
                 setAttachments((prev) => [...prev, ...list])
               }
-              className="w-8 h-8 rounded-full border border-[rgba(0,0,0,0.12)] bg-white hover:bg-[var(--c-btn-hover)]"
+              className="w-8 h-8 rounded-full border border-[var(--c-border)] bg-[var(--c-btn)] hover:bg-[var(--c-btn-hover)]"
             />
 
             {/* 右侧: 模型标签 + 灯泡 + 发送按钮 */}

@@ -14,7 +14,7 @@ export default function Sidebar() {
       <div className="px-3 pt-4 pb-2">
         <button
           onClick={newChat}
-          className="w-full flex items-center justify-center gap-2 px-3 py-2 text-[13px] font-medium text-[var(--c-muted)] bg-[var(--c-btn)] hover:bg-[var(--c-btn-hover)] rounded-xl transition-colors border border-[rgba(0,0,0,0.18)]"
+          className="w-full flex items-center justify-center gap-2 px-3 py-2 text-[13px] font-medium text-[var(--c-muted)] bg-[var(--c-btn)] hover:bg-[var(--c-btn-hover)] rounded-xl transition-colors border border-[var(--c-border)]"
         >
           <span className="text-[var(--c-faint)] text-base">＋</span>
           <span>New Chat</span>
