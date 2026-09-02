@@ -7,7 +7,12 @@ on:
   push:
     tags:
       - 'v*'
-  workflow_dispatch: # 手动触发按钮(不打 tag 也能用来试打包)
+  workflow_dispatch: # 手动触发:可仅试打包,也可直接发布(需打开 Release 开关)
+    inputs:
+      release:
+        description: '创建/更新 GitHub Release(默认开启;关闭则仅产出安装包 artifact)'
+        type: boolean
+        default: true
 
 permissions:
   contents: write
@@ -57,31 +62,46 @@ jobs:
           if (-not (Test-Path 'cudart-engine\cudart64_12.dll')) { throw 'cudart64_12.dll missing' }
           Write-Host "engine dirs OK: llama-engine + cudart-engine"
 
+      # ---- 计算本次要发布的版本号 ----
+      # push tag 时直接用 tag 名(如 v0.1.1);手动触发时从 package.json 读 version(如 0.1.1)
+      - name: Resolve release version
+        id: ver
+        shell: bash
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+            VER="${GITHUB_REF_NAME}"
+          else
+            VER="v$(node -p "require('./llama-studio-app/package.json').version")"
+          fi
+          echo "RELEASE_TAG=${VER}" >> "$GITHUB_ENV"
+          echo "Resolved release tag: ${VER}"
+
       # ---- 打包安装包(extraResources 会把引擎打进 resources/engines/) ----
       - name: Build installer
         working-directory: llama-studio-app
         run: npm run build:win
 
       # ---- 上传产物 + 发布 Release(幂等:create 失败→upload 补资产)----
+      # 触发条件:推送了 v* tag,或手动触发且打开了 Release 开关
       - name: Upload to GitHub Release
-        if: startsWith(github.ref, 'refs/tags/')
+        if: startsWith(github.ref, 'refs/tags/') || (github.event_name == 'workflow_dispatch' && github.event.inputs.release == 'true')
         shell: bash
         run: |
           # 已存在则跳过创建,否则新建(draft 避免半成品可见)
-          gh release create "${GITHUB_REF_NAME}" \
-            --title "Llama Studio ${GITHUB_REF_NAME}" \
+          gh release create "${RELEASE_TAG}" \
+            --title "Llama Studio ${RELEASE_TAG}" \
             --notes "内置 llama.cpp ${{ env.LLAMA_BUILD }} (CUDA ${{ env.CUDA_VER }}) 引擎。下载后直接安装,无需另行配置引擎。" \
             --generate-notes || true
           # 上传/覆盖安装包资产(--clobber 支持重跑)
-          gh release upload "${GITHUB_REF_NAME}" llama-studio-app/build/*.exe \
+          gh release upload "${RELEASE_TAG}" llama-studio-app/build/*.exe \
             --clobber \
             || true
-          gh release view "${GITHUB_REF_NAME}" --json name,assets --jq '.name + " assets: " + ([.assets[].name] | join(", "))'
+          gh release view "${RELEASE_TAG}" --json name,assets --jq '.name + " assets: " + ([.assets[].name] | join(", "))'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload artifact (debug)
-        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
+        if: ${{ !(startsWith(github.ref, 'refs/tags/') || (github.event_name == 'workflow_dispatch' && github.event.inputs.release == 'true')) }}
         uses: actions/upload-artifact@v4
         with:
           name: llama-studio-installer
