@@ -98,10 +98,13 @@ export function AddFileButton({
         type="button"
         onClick={() => setOpen((v) => !v)}
         disabled={disabled}
-        title="添加附件"
-        className="w-8 h-8 flex items-center justify-center rounded-full text-lg text-[var(--c-muted)] hover:bg-[var(--c-btn-hover)] hover:text-[var(--c-text)] disabled:opacity-30 transition-colors"
+        title="Add attachment"
+        className="w-8 h-8 flex items-center justify-center rounded-full text-[var(--c-muted)] hover:text-[var(--c-text)] hover:bg-[var(--c-btn-hover)] disabled:opacity-30 transition-colors"
       >
-        +
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <line x1="12" y1="5" x2="12" y2="19" />
+          <line x1="5" y1="12" x2="19" y2="12" />
+        </svg>
       </button>
       <input ref={inputRef} type="file" multiple hidden onChange={onFiles} />
       {open && (
@@ -109,11 +112,11 @@ export function AddFileButton({
           {/* 遮罩:点击关闭浮层 */}
           <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
           {/* 输入区贴近窗口底部,浮层必须向上弹出才能不被裁切 */}
-          <div className="absolute left-0 bottom-full mb-2 z-20 w-36 rounded-lg border border-[var(--c-border)] bg-[var(--c-panel)] shadow-lg py-1">
+          <div className="absolute left-0 bottom-full mb-2 z-20 w-36 rounded-xl border border-[var(--c-border)] bg-[var(--c-panel)] shadow-lg py-1">
             <button
               type="button"
               onClick={onPick}
-              className="w-full text-left px-3 py-1.5 text-sm text-[var(--c-text)] hover:bg-[var(--c-btn)]"
+              className="w-full text-left px-3 py-2 text-[13px] text-[var(--c-text)] hover:bg-[var(--c-btn)] rounded-lg transition-colors"
             >
               📎 Add file
             </button>
@@ -134,8 +137,8 @@ export function AttachmentChip({
 }) {
   const icon = att.kind === 'image' ? '🖼' : att.kind === 'text' ? '📄' : '📎'
   return (
-    <span className="inline-flex items-center gap-1 max-w-[220px] px-2 py-1 rounded-full bg-[var(--c-btn)] border border-[var(--c-border)] text-xs text-[var(--c-text)]">
-      <span className="flex items-center gap-1 min-w-0">
+    <span className="inline-flex items-center gap-1.5 max-w-[220px] px-2.5 py-1.5 rounded-lg bg-[var(--c-btn)] border border-[var(--c-border)] text-[12px] text-[var(--c-text)]">
+      <span className="flex items-center gap-1.5 min-w-0">
         <span>{icon}</span>
         <span className="truncate">{att.name}</span>
         <span className="text-[var(--c-faint)] shrink-0">{formatSize(att.size)}</span>
@@ -143,7 +146,7 @@ export function AttachmentChip({
       <button
         type="button"
         onClick={() => onRemove(att.id)}
-        title="移除附件"
+        title="Remove attachment"
         className="text-[var(--c-muted)] hover:text-red-400 shrink-0 pl-1"
       >
         ×
@@ -156,7 +159,7 @@ export function AttachmentChip({
 export function AttachmentTag({ att }: { att: Attachment }) {
   const icon = att.kind === 'image' ? '🖼' : att.kind === 'text' ? '📄' : '📎'
   return (
-    <span className="inline-flex items-center gap-1 text-xs text-[var(--c-muted)]">
+    <span className="inline-flex items-center gap-1.5 text-[12px] text-[var(--c-muted)]">
       <span>{icon}</span>
       <span className="truncate max-w-[160px]">{att.name}</span>
       <span className="text-[var(--c-faint)]">{formatSize(att.size)}</span>

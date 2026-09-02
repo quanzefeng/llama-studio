@@ -17,9 +17,10 @@ const CONV_KEY = 'llama-studio-conversations'
 function loadTheme(): Theme {
   try {
     const t = localStorage.getItem(THEME_KEY)
-    return t === 'light' ? 'light' : 'dark'
+    if (t === 'dark') return 'dark' // 用户显式存过偏好则尊重
+    return 'light' // 默认浅色(SaaS 主视觉)
   } catch {
-    return 'dark'
+    return 'light'
   }
 }
 

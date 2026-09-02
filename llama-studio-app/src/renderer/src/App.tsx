@@ -42,29 +42,35 @@ export default function App() {
 
   return (
     <div className="h-screen flex flex-col bg-[var(--c-bg)] text-[var(--c-text)]">
-      <header className="flex items-center gap-2 px-4 h-12 border-b border-[var(--c-border)] shrink-0">
-        <span className="font-bold tracking-tight">Llama Studio</span>
-        <nav className="flex gap-1 ml-4">
+      {/* Header — light blur, clean SaaS style */}
+      <header
+        className="flex items-center gap-3 px-5 h-14 border-b border-[var(--c-border)]/40 shrink-0"
+        style={{ background: 'var(--c-header-bg)', backdropFilter: 'blur(var(--c-header-blur))', WebkitBackdropFilter: 'blur(var(--c-header-blur))' }}
+      >
+        <span className="font-bold text-[15px] tracking-tight text-[var(--c-text)]">
+          Llama Studio
+        </span>
+        <nav className="flex gap-1 ml-5">
           {TABS.map((t) => (
             <button
               key={t.id}
               onClick={() => setTab(t.id)}
-              className={`px-3 py-1 rounded text-sm transition ${
+              className={`px-3.5 py-1.5 rounded-lg text-sm transition-all relative font-medium ${
                 tab === t.id
-                  ? 'bg-[var(--c-btn-hover)] text-[var(--c-text)]'
-                  : 'text-[var(--c-muted)] hover:bg-[var(--c-btn)]'
+                  ? 'text-[var(--c-accent-text)] bg-[var(--c-accent-muted)]'
+                  : 'text-[var(--c-muted)] hover:bg-[var(--c-btn)] hover:text-[var(--c-text)]'
               }`}
             >
               {t.label}
             </button>
           ))}
         </nav>
-        <div className="ml-auto flex items-center gap-3">
+        <div className="ml-auto flex items-center gap-4">
           <StatusBadge />
           <button
             onClick={toggleTheme}
             title="切换深/浅色"
-            className="px-2 py-1 rounded text-sm bg-[var(--c-btn)] hover:bg-[var(--c-btn-hover)]"
+            className="px-3 py-1.5 rounded-lg text-sm bg-[var(--c-btn)] hover:bg-[var(--c-btn-hover)] border border-[var(--c-border)] transition-colors font-medium"
           >
             {theme === 'dark' ? '☀ 浅色' : '🌙 深色'}
           </button>

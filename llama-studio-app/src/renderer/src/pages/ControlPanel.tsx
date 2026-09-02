@@ -1,4 +1,5 @@
 // 控制面板 — 组合 启动参数 / 采样 / 预设 / 命令预览 / 操作按钮
+// SaaS dashboard style: rounded-2xl cards, clean section headings, soft action bar
 
 import { useEffect, useRef, useState } from 'react'
 import { useStore } from '../store'
@@ -203,38 +204,38 @@ export default function ControlPanel() {
   }, [selectedPreset])
 
   return (
-    <div className="h-full overflow-auto p-4 space-y-4">
+    <div className="h-full overflow-auto p-5 space-y-4">
       {banner && (
-        <div className="p-2 rounded bg-red-950/60 border border-red-800 text-red-200 text-sm">
+        <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm dark:bg-red-950/60 dark:border-red-800 dark:text-red-200">
           {banner}
         </div>
       )}
 
       <div className="grid grid-cols-2 gap-4">
-        <section className="rounded-lg border border-[var(--c-border)] bg-[var(--c-panel)] p-3">
-          <h2 className="text-sm font-semibold text-[var(--c-text)] mb-3">
+        <section className="rounded-2xl glass-panel p-4">
+          <h2 className="text-sm font-semibold text-[var(--c-text)] mb-3 section-heading">
             启动配置
-            <span className="text-xs text-[var(--c-faint)] ml-2">(改了需重启)</span>
+            <span className="text-[11px] text-[var(--c-faint)] ml-2">(改了需重启)</span>
           </h2>
           <LaunchParams launch={config.launch} onChange={setLaunch} />
         </section>
 
         <section className="space-y-4">
-          <div className="rounded-lg border border-[var(--c-border)] bg-[var(--c-panel)] p-3">
-            <h2 className="text-sm font-semibold text-[var(--c-text)] mb-3">
+          <div className="rounded-2xl glass-panel p-4">
+            <h2 className="text-sm font-semibold text-[var(--c-text)] mb-3 section-heading">
               采样
-              <span className="text-xs text-[var(--c-faint)] ml-2">(实时生效,无需重启)</span>
+              <span className="text-[11px] text-[var(--c-faint)] ml-2">(实时生效,无需重启)</span>
             </h2>
             <SamplingParams sampling={sampling} onChange={setSampling} />
           </div>
 
-          <div className="rounded-lg border border-[var(--c-border)] bg-[var(--c-panel)] p-3">
-            <h2 className="text-sm font-semibold text-[var(--c-text)] mb-3">预设</h2>
-            <div className="flex gap-1 items-center">
+          <div className="rounded-2xl glass-panel p-4">
+            <h2 className="text-sm font-semibold text-[var(--c-text)] mb-3 section-heading">预设</h2>
+            <div className="flex gap-2 items-center">
               <select
                 value={selectedPreset}
                 onChange={(e) => setSelectedPreset(e.target.value)}
-                className="flex-1 min-w-0 bg-[var(--c-input)] border border-[var(--c-border)] rounded px-2 py-1 text-sm focus:outline-none focus:border-[var(--c-muted)]"
+                className="flex-1 min-w-0 bg-[var(--c-input)] border border-[var(--c-border)] rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-[var(--c-accent-1)] focus:c-accent-glow cursor-pointer"
               >
                 <option value="">(选择预设)</option>
                 <optgroup label="内置模板">
@@ -255,14 +256,14 @@ export default function ControlPanel() {
               <button
                 onClick={loadPreset}
                 disabled={!selectedPreset}
-                className="px-2 py-1 text-sm rounded bg-[var(--c-btn)] hover:bg-[var(--c-btn-hover)] disabled:opacity-40"
+                className="px-3 py-1.5 text-sm rounded-lg bg-[var(--c-btn)] hover:bg-[var(--c-btn-hover)] disabled:opacity-30 border border-[var(--c-border)] transition-colors font-medium"
               >
                 加载
               </button>
               <button
                 onClick={deletePreset}
                 disabled={!selectedPreset || isBuiltin}
-                className="px-2 py-1 text-sm rounded bg-[var(--c-btn)] hover:bg-[var(--c-btn-hover)] disabled:opacity-40"
+                className="px-3 py-1.5 text-sm rounded-lg bg-[var(--c-btn)] hover:bg-[var(--c-btn-hover)] disabled:opacity-30 border border-[var(--c-border)] transition-colors font-medium"
               >
                 删除
               </button>
@@ -272,21 +273,21 @@ export default function ControlPanel() {
                   setSaveDesc('')
                   setShowSave(true)
                 }}
-                className="px-2 py-1 text-sm rounded bg-blue-700 hover:bg-blue-600"
+                className="px-3 py-1.5 text-sm rounded-lg btn-accent font-medium"
               >
                 保存
               </button>
             </div>
             {selectedInfo && (
-              <p className="text-xs text-[var(--c-faint)] mt-1.5">{selectedInfo}</p>
+              <p className="text-[11px] text-[var(--c-faint)] mt-2 leading-relaxed">{selectedInfo}</p>
             )}
 
             {/* 撤销预设 — 恢复加载前参数并退回选择态 */}
-            <div className="mt-2 flex items-center gap-2">
+            <div className="mt-2.5 flex items-center gap-2">
               <button
                 onClick={undoPreset}
                 disabled={!dirty}
-                className="px-2 py-1 text-sm rounded bg-[var(--c-btn)] hover:bg-[var(--c-btn-hover)] disabled:opacity-40"
+                className="px-3 py-1.5 text-sm rounded-lg bg-[var(--c-btn)] hover:bg-[var(--c-btn-hover)] disabled:opacity-30 border border-[var(--c-border)] transition-colors font-medium"
               >
                 ↺ 撤销预设
               </button>
@@ -297,34 +298,34 @@ export default function ControlPanel() {
 
             {/* 保存预设对话框 */}
             {showSave && (
-              <div className="mt-3 rounded-md border border-[var(--c-border)] bg-[var(--c-bg)]/60 p-3 space-y-2">
+              <div className="mt-3 rounded-xl border border-[var(--c-border)] bg-[var(--c-bg)]/60 p-4 space-y-2.5">
                 <input
                   value={saveName}
                   onChange={(e) => setSaveName(e.target.value)}
                   placeholder="预设名称(必填)"
                   autoFocus
-                  className="w-full bg-[var(--c-input)] border border-[var(--c-border)] rounded px-2 py-1 text-sm focus:outline-none focus:border-[var(--c-muted)]"
+                  className="w-full bg-[var(--c-input)] border border-[var(--c-border)] rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-[var(--c-accent-1)] focus:c-accent-glow"
                 />
                 <input
                   value={saveDesc}
                   onChange={(e) => setSaveDesc(e.target.value)}
                   placeholder="一句话说明(可选,加载时展示)"
-                  className="w-full bg-[var(--c-input)] border border-[var(--c-border)] rounded px-2 py-1 text-sm focus:outline-none focus:border-[var(--c-muted)]"
+                  className="w-full bg-[var(--c-input)] border border-[var(--c-border)] rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-[var(--c-accent-1)] focus:c-accent-glow"
                 />
                 <p className="text-[10px] text-[var(--c-faint)]">
                   预设保存当前启动配置 + 采样参数(不含本机引擎路径,换机加载不串)
                 </p>
-                <div className="flex gap-1">
+                <div className="flex gap-2">
                   <button
                     onClick={confirmSave}
                     disabled={!saveName.trim()}
-                    className="px-3 py-1 text-sm rounded bg-emerald-700 hover:bg-emerald-600 disabled:opacity-40"
+                    className="px-4 py-1.5 text-sm rounded-lg btn-accent disabled:opacity-40 font-medium"
                   >
                     保存
                   </button>
                   <button
                     onClick={() => setShowSave(false)}
-                    className="px-3 py-1 text-sm rounded bg-[var(--c-btn)] hover:bg-[var(--c-btn-hover)]"
+                    className="px-4 py-1.5 text-sm rounded-lg bg-[var(--c-btn)] hover:bg-[var(--c-btn-hover)] transition-colors border border-[var(--c-border)]"
                   >
                     取消
                   </button>
@@ -334,17 +335,17 @@ export default function ControlPanel() {
           </div>
 
           {/* 推理强度 — 预设下方独立卡片 */}
-          <div className="rounded-lg border border-[var(--c-border)] bg-[var(--c-panel)] p-3">
-            <h2 className="text-sm font-semibold text-[var(--c-text)] mb-3">
+          <div className="rounded-2xl glass-panel p-4">
+            <h2 className="text-sm font-semibold text-[var(--c-text)] mb-3 section-heading">
               推理强度
-              <span className="text-xs text-[var(--c-faint)] ml-2">(思考预算,Max 不限)</span>
+              <span className="text-[11px] text-[var(--c-faint)] ml-2">(思考预算,Max 不限)</span>
             </h2>
             <select
               value={sampling.reasoningIntensity}
               onChange={(e) =>
                 setSampling({ reasoningIntensity: e.target.value as ReasoningIntensity })
               }
-              className="w-full bg-[var(--c-input)] border border-[var(--c-border)] rounded px-2 py-1 text-sm focus:outline-none focus:border-[var(--c-muted)]"
+              className="w-full bg-[var(--c-input)] border border-[var(--c-border)] rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-[var(--c-accent-1)] focus:c-accent-glow cursor-pointer"
             >
               <option value="low">Low (≤1024)</option>
               <option value="medium">Medium (≤2048)</option>
@@ -355,46 +356,48 @@ export default function ControlPanel() {
         </section>
       </div>
 
-      <section className="rounded-lg border border-[var(--c-border)] bg-[var(--c-code)] p-3">
+      <section className="rounded-2xl glass-panel p-4">
         <div className="flex items-center justify-between mb-2">
-          <h2 className="text-sm font-semibold text-[var(--c-text)]">命令预览</h2>
+          <h2 className="text-sm font-semibold text-[var(--c-text)] section-heading">命令预览</h2>
           <button
             onClick={copyCmd}
-            className="text-xs px-2 py-0.5 rounded bg-[var(--c-btn)] hover:bg-[var(--c-btn-hover)]"
+            className="text-xs px-2.5 py-1 rounded-lg bg-[var(--c-btn)] hover:bg-[var(--c-btn-hover)] border border-[var(--c-border)] transition-colors font-medium"
           >
             {copied ? '已复制' : '复制'}
           </button>
         </div>
-        <pre className="text-xs text-[var(--c-text)] whitespace-pre-wrap break-all font-mono">
+        <pre className="text-xs text-[var(--c-text)] whitespace-pre-wrap break-all font-mono leading-relaxed">
           {cmd}
         </pre>
       </section>
 
-      <div className="flex flex-wrap items-center gap-2 sticky bottom-0 bg-[var(--c-bg)] py-2 -mx-4 px-4 border-t border-[var(--c-border)]">
+      {/* Bottom action bar — light blur + clean */}
+      <div className="flex flex-wrap items-center gap-3 sticky bottom-0 py-3 -mx-5 px-5 border-t border-[var(--c-border)]/40"
+           style={{ background: 'var(--c-bar-bg)', backdropFilter: 'blur(var(--c-bar-blur))', WebkitBackdropFilter: 'blur(var(--c-bar-blur))' }}>
         <button
           onClick={start}
           disabled={busy}
-          className="px-4 py-2 rounded text-sm font-medium bg-emerald-700 hover:bg-emerald-600 disabled:opacity-40"
+          className="px-5 py-2 rounded-xl text-sm font-semibold btn-accent disabled:opacity-40"
         >
           ▶ 启动
         </button>
         <button
           onClick={stop}
           disabled={!running && !busy}
-          className="px-4 py-2 rounded text-sm bg-[var(--c-btn)] hover:bg-[var(--c-btn-hover)] disabled:opacity-40"
+          className="px-5 py-2 rounded-xl text-sm bg-[var(--c-btn)] hover:bg-[var(--c-btn-hover)] disabled:opacity-30 transition-colors border border-[var(--c-border)] font-medium"
         >
           ⏹ 停止
         </button>
         {dirty && running && (
           <button
             onClick={restart}
-            className="px-4 py-2 rounded text-sm font-medium bg-amber-700 hover:bg-amber-600"
+            className="px-5 py-2 rounded-xl text-sm font-semibold bg-amber-500 hover:bg-amber-400 text-white shadow-[0_2px_8px_rgba(245,158,11,0.3)]"
           >
             ↻ 应用并重启
           </button>
         )}
         {dirty && (
-          <span className="text-xs text-amber-400">
+          <span className="text-[11px] text-amber-600 dark:text-amber-400">
             启动参数有改动,{running ? '需重启生效;' : ''}可在「预设」卡片撤销
           </span>
         )}

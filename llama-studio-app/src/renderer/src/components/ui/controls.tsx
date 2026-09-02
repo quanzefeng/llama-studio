@@ -1,4 +1,5 @@
 // UI 控件原语 — 用 CSS 变量,自动跟随深/浅主题
+// SaaS dashboard style: clean inputs, violet focus rings, soft shadows
 
 import type { ReactNode } from 'react'
 
@@ -12,10 +13,10 @@ export function Field({
   children: ReactNode
 }) {
   return (
-    <label className="flex flex-col gap-1">
-      <span className="text-xs text-[var(--c-muted)] flex items-center gap-1">
+    <label className="flex flex-col gap-1.5">
+      <span className="text-[11px] font-medium tracking-wide text-[var(--c-muted)] flex items-center gap-1.5">
         {label}
-        {hint && <span className="text-[var(--c-faint)]">({hint})</span>}
+        {hint && <span className="text-[var(--c-faint)] tracking-normal">({hint})</span>}
       </span>
       {children}
     </label>
@@ -46,7 +47,7 @@ export function NumberField({
       step={step}
       disabled={disabled}
       onChange={(e) => onChange(e.target.value === '' ? 0 : Number(e.target.value))}
-      className="bg-[var(--c-input)] border border-[var(--c-border)] rounded px-2 py-1 text-sm focus:outline-none focus:border-[var(--c-muted)] disabled:opacity-50 w-full"
+      className="bg-[var(--c-input)] border border-[var(--c-border)] rounded-lg px-3 py-1.5 text-sm font-medium tabular-nums focus:outline-none focus:border-[var(--c-accent-1)] focus:c-accent-glow disabled:opacity-40 w-full"
     />
   )
 }
@@ -65,7 +66,7 @@ export function Slider({
   step: number
 }) {
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-3">
       <input
         type="range"
         value={value}
@@ -73,9 +74,9 @@ export function Slider({
         max={max}
         step={step}
         onChange={(e) => onChange(Number(e.target.value))}
-        className="flex-1 accent-emerald-500"
+        className="flex-1 slider-accent"
       />
-      <span className="text-xs tabular-nums w-14 text-right text-[var(--c-text)]">
+      <span className="text-xs tabular-nums font-medium w-14 text-right text-[var(--c-accent-text)]">
         {Number.isInteger(step) ? value : value.toFixed(2)}
       </span>
     </div>
@@ -95,13 +96,13 @@ export function Switch({
       role="switch"
       aria-checked={checked}
       onClick={() => onChange(!checked)}
-      className={`relative w-10 h-5 rounded-full transition shrink-0 ${
-        checked ? 'bg-emerald-600' : 'bg-[var(--c-btn-hover)]'
+      className={`relative w-10 h-[22px] rounded-full transition-all shrink-0 ${
+        checked ? 'c-accent-gradient-bg shadow-[0_2px_8px_rgba(124,92,255,0.35)]' : 'bg-[var(--c-btn-hover)]'
       }`}
     >
       <span
-        className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-all ${
-          checked ? 'left-5' : 'left-0.5'
+        className={`absolute top-[3px] w-4 h-4 rounded-full bg-white shadow-[0_1px_3px_rgba(0,0,0,0.2)] transition-all ${
+          checked ? 'left-[22px]' : 'left-[3px]'
         }`}
       />
     </button>
@@ -118,8 +119,8 @@ export function Toggle({
   onChange: (v: boolean) => void
 }) {
   return (
-    <label className="flex items-center justify-between gap-2 text-xs text-[var(--c-muted)] px-1 py-1 rounded hover:bg-[var(--c-btn)]">
-      <span className="font-mono">{label}</span>
+    <label className="flex items-center justify-between gap-2 text-xs text-[var(--c-muted)] px-2 py-1.5 rounded-lg hover:bg-[var(--c-btn)] cursor-pointer transition-colors">
+      <span className="font-mono text-[11px]">{label}</span>
       <Switch checked={checked} onChange={onChange} />
     </label>
   )
@@ -138,7 +139,7 @@ export function Select({
     <select
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="bg-[var(--c-input)] border border-[var(--c-border)] rounded px-2 py-1 text-sm focus:outline-none focus:border-[var(--c-muted)] w-full"
+      className="bg-[var(--c-input)] border border-[var(--c-border)] rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-[var(--c-accent-1)] focus:c-accent-glow w-full cursor-pointer"
     >
       {options.map((o) => (
         <option key={o.value} value={o.value}>
@@ -165,20 +166,20 @@ export function FilePicker({
   pickLabel?: string
 }) {
   return (
-    <div className="flex gap-1">
+    <div className="flex gap-2">
       <input
         type="text"
         value={value}
         placeholder={placeholder}
         disabled={disabled}
         onChange={(e) => onChange(e.target.value)}
-        className="flex-1 min-w-0 bg-[var(--c-input)] border border-[var(--c-border)] rounded px-2 py-1 text-sm focus:outline-none focus:border-[var(--c-muted)] disabled:opacity-50"
+        className="flex-1 min-w-0 bg-[var(--c-input)] border border-[var(--c-border)] rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-[var(--c-accent-1)] focus:c-accent-glow disabled:opacity-40"
       />
       <button
         type="button"
         onClick={onPick}
         disabled={disabled}
-        className="px-2 py-1 text-sm rounded bg-[var(--c-btn)] hover:bg-[var(--c-btn-hover)] border border-[var(--c-border)] disabled:opacity-50 shrink-0"
+        className="px-3 py-1.5 text-sm rounded-lg bg-[var(--c-btn)] hover:bg-[var(--c-btn-hover)] border border-[var(--c-border)] disabled:opacity-40 shrink-0 transition-colors font-medium"
       >
         {pickLabel}
       </button>
@@ -200,7 +201,7 @@ export function TextInput({
       type="text"
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className={`bg-[var(--c-input)] border border-[var(--c-border)] rounded px-2 py-1 text-sm focus:outline-none focus:border-[var(--c-muted)] w-full ${className}`}
+      className={`bg-[var(--c-input)] border border-[var(--c-border)] rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-[var(--c-accent-1)] focus:c-accent-glow w-full ${className}`}
     />
   )
 }

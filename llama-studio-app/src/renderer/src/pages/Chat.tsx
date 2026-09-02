@@ -116,7 +116,7 @@ function parseReasoning(raw: string): { reasoning: string; content: string } {
   return { reasoning, content }
 }
 
-// 消息行:assistant/user 均走 Markdown,推理块(💭)保持纯文本
+// 消息行 — Apple iMessage 风格:用户右对齐气泡 / 助手左对齐纯文本
 function MessageRow({
   msg,
   streaming,
@@ -128,25 +128,41 @@ function MessageRow({
   const hasReasoning = !!msg.reasoning && msg.reasoning.trim().length > 0
   const atts = msg.attachments ?? []
 
+  if (isUser) {
+    // 用户消息 — 右对齐浅灰气泡
+    return (
+      <div className="flex justify-end py-2 px-4">
+        <div className="max-w-[75%] flex flex-col items-end gap-1.5">
+          {atts.length > 0 && (
+            <div className="flex flex-wrap gap-2 justify-end">
+              {atts.map((a) => (
+                <AttachmentTag key={a.id} att={a} />
+              ))}
+            </div>
+          )}
+          <div className="bg-[var(--c-btn)] text-[var(--c-text)] text-[15px] leading-relaxed px-4 py-2.5 rounded-2xl rounded-br-md">
+            {msg.content}
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // 助手消息 — 左对齐,推理块 + Markdown
   return (
-    <div className="py-4 border-b border-[var(--c-border)]">
-      {!isUser && hasReasoning && (
-        <div className="text-xs text-[var(--c-muted)] mb-1 whitespace-pre-wrap">
-          💭 {msg.reasoning}
-        </div>
-      )}
-      {atts.length > 0 && (
-        <div className="flex flex-wrap gap-2 mb-2">
-          {atts.map((a) => (
-            <AttachmentTag key={a.id} att={a} />
-          ))}
-        </div>
-      )}
-      <div className="font-medium text-[var(--c-text)] leading-relaxed">
-        <Markdown content={msg.content || ''} />
-        {streaming && !hasReasoning && !msg.content && (
-          <span className="whitespace-pre-wrap" aria-hidden>▍</span>
+    <div className="flex justify-start py-3 px-6">
+      <div className="max-w-[720px] w-full">
+        {!hasReasoning ? null : (
+          <div className="text-xs text-[var(--c-faint)] mb-2 whitespace-pre-wrap leading-relaxed">
+            💭 {msg.reasoning}
+          </div>
         )}
+        <div className="text-[var(--c-text)] text-[15px] leading-[1.65]">
+          <Markdown content={msg.content || ''} />
+          {streaming && !hasReasoning && !msg.content && (
+            <span className="whitespace-pre-wrap" aria-hidden>▍</span>
+          )}
+        </div>
       </div>
     </div>
   )
@@ -318,90 +334,123 @@ export default function Chat() {
     }
   }
 
+  /* ── Shared composer — reused in empty & non-empty states ── */
+  function renderComposer() {
+    return (
+      <>
+        {attachments.length > 0 && (
+          <div className="flex flex-wrap gap-2 mb-2.5">
+            {attachments.map((a) => (
+              <AttachmentChip
+                key={a.id}
+                att={a}
+                onRemove={(id) =>
+                  setAttachments((prev) => prev.filter((x) => x.id !== id))
+                }
+              />
+            ))}
+          </div>
+        )}
+        <div
+          className="flex items-center gap-3 rounded-[22px] border border-[rgba(0,0,0,0.12)] px-5 py-5 bg-white"
+          style={{
+            boxShadow:
+              '0 8px 28px rgba(0,0,0,0.10), 0 2px 6px rgba(0,0,0,0.06)',
+          }}
+        >
+          <AddFileButton
+            disabled={!ready || streaming}
+            onAdd={(list) =>
+              setAttachments((prev) => [...prev, ...list])
+            }
+          />
+          <textarea
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={onKeyDown}
+            disabled={!ready}
+            placeholder={ready ? 'Type a message...' : 'Model not ready'}
+            rows={1}
+            className="flex-1 bg-transparent text-[15px] resize-none focus:outline-none text-[var(--c-text)] placeholder:text-[var(--c-muted)] disabled:opacity-50 leading-[1.5] min-h-[32px] py-1"
+          />
+          {config.launch.modelPath && (
+            <span
+              className="text-[var(--c-muted)] text-xs font-medium select-none shrink-0 max-w-[100px] truncate"
+              title={config.launch.modelPath}
+            >
+              {config.launch.modelPath.split(/[/\\]/).pop() ?? ''}
+            </span>
+          )}
+          {streaming ? (
+            <button
+              onClick={stop}
+              className="w-8 h-8 flex items-center justify-center rounded-full bg-red-500 hover:bg-red-400 text-white text-sm shrink-0 transition-colors"
+            >
+              ⏹
+            </button>
+          ) : (
+            <button
+              onClick={send}
+              disabled={!ready || (!input.trim() && attachments.length === 0)}
+              className="w-8 h-8 flex items-center justify-center rounded-full bg-[var(--c-text)] hover:opacity-80 text-white text-sm disabled:opacity-20 shrink-0 transition-all"
+            >
+              ↑
+            </button>
+          )}
+        </div>
+      </>
+    )
+  }
+
   return (
     <div className="h-full flex bg-[var(--c-bg)]">
       <Sidebar />
       <div className="flex-1 flex flex-col min-w-0">
-        {/* 消息区 — 居中窄列 */}
-        <div
-          ref={scrollRef}
-          className="flex-1 overflow-auto flex justify-center"
-          onScroll={(e) => {
-            const el = e.currentTarget
-            pinnedRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < 40
-          }}
-        >
-          <div className="w-full max-w-[800px] px-6 py-6">
-            {messages.length === 0 ? (
-              <div className="text-[var(--c-faint)] text-sm text-center mt-16">
-                {ready
-                  ? '输入消息开始对话'
-                  : '请先在控制台启动模型,状态变为「就绪」后即可对话'}
-              </div>
-            ) : (
-              messages.map((m, i) => (
-                <MessageRow
-                  key={i}
-                  msg={m}
-                  streaming={streaming && i === messages.length - 1}
-                />
-              ))
-            )}
+        {messages.length === 0 ? (
+          /* ── Empty state: centered vertical stack (title → subtitle → composer) ── */
+          <div className="flex-1 flex flex-col items-center justify-center px-6">
+            <h2
+              className="text-[var(--c-text)] font-semibold tracking-tight"
+              style={{ fontSize: '30px', lineHeight: 1.2 }}
+            >
+              Hello there
+            </h2>
+            <p className="text-[var(--c-muted)] text-[15px] mt-3">
+              Type a message or upload files to get started
+            </p>
+            <div className="w-full max-w-[720px] mt-7">
+              {renderComposer()}
+            </div>
           </div>
-        </div>
-
-        {/* 输入区 — 居中窄列 + 圆角 */}
-        <div className="border-t border-[var(--c-border)] bg-[var(--c-bg)]">
-          <div className="max-w-[800px] mx-auto px-6 py-4">
-            {/* 附件 chips 行(待发送) */}
-            {attachments.length > 0 && (
-              <div className="flex flex-wrap gap-2 mb-2">
-                {attachments.map((a) => (
-                  <AttachmentChip
-                    key={a.id}
-                    att={a}
-                    onRemove={(id) =>
-                      setAttachments((prev) => prev.filter((x) => x.id !== id))
-                    }
+        ) : (
+          <>
+            {/* ── Messages scroll area ── */}
+            <div
+              ref={scrollRef}
+              className="flex-1 overflow-auto flex justify-center"
+              onScroll={(e) => {
+                const el = e.currentTarget
+                pinnedRef.current =
+                  el.scrollHeight - el.scrollTop - el.clientHeight < 40
+              }}
+            >
+              <div className="w-full max-w-[800px] py-8">
+                {messages.map((m, i) => (
+                  <MessageRow
+                    key={i}
+                    msg={m}
+                    streaming={streaming && i === messages.length - 1}
                   />
                 ))}
               </div>
-            )}
-            <div className="flex items-end gap-3 bg-[var(--c-input)] border border-[var(--c-border)] rounded-2xl px-4 py-3">
-              <AddFileButton
-                disabled={!ready || streaming}
-                onAdd={(list) =>
-                  setAttachments((prev) => [...prev, ...list])
-                }
-              />
-              <textarea
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={onKeyDown}
-                disabled={!ready}
-                placeholder={ready ? '输入消息...' : '模型未就绪'}
-                rows={1}
-                className="flex-1 bg-transparent text-sm resize-none focus:outline-none text-[var(--c-text)] placeholder:text-[var(--c-faint)] disabled:opacity-50"
-              />
-              {streaming ? (
-                <button
-                  onClick={stop}
-                  className="w-8 h-8 flex items-center justify-center rounded-full bg-red-700 hover:bg-red-600 text-white text-sm shrink-0"
-                >
-                  ⏹
-                </button>
-              ) : (
-                <button
-                  onClick={send}
-                  disabled={!ready || (!input.trim() && attachments.length === 0)}
-                  className="w-8 h-8 flex items-center justify-center rounded-full bg-emerald-700 hover:bg-emerald-600 text-white text-sm disabled:opacity-30 shrink-0"
-                >
-                  ↑
-                </button>
-              )}
             </div>
-          </div>
-        </div>
+
+            {/* ── Bottom-fixed composer ── */}
+            <div className="px-6 pb-5 pt-1">
+              <div className="max-w-[720px] mx-auto">{renderComposer()}</div>
+            </div>
+          </>
+        )}
       </div>
     </div>
   )

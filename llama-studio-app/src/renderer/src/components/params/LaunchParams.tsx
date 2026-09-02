@@ -137,7 +137,7 @@ export default function LaunchParams({ launch, onChange }: Props) {
         <Select value={launch.specType} onChange={(v) => onChange({ specType: v as SpecType })} options={SPEC_TYPES} />
       </Field>
       {showDraft && (
-        <div className="grid grid-cols-2 gap-3 pl-3 border-l-2 border-[var(--c-border)]">
+          <div className="grid grid-cols-2 gap-3 pl-3 border-l-2 border-[var(--c-accent-1)]">
           <Field label="--spec-draft-n-max 草案层数">
             <NumberField value={launch.specDraftNMax} onChange={(v) => onChange({ specDraftNMax: v })} min={1} />
           </Field>
@@ -166,7 +166,7 @@ export default function LaunchParams({ launch, onChange }: Props) {
           />
         </Field>
         {launch.ropeScaling !== 'none' && (
-          <div className="grid grid-cols-2 gap-3 pl-3 border-l-2 border-[var(--c-border)]">
+        <div className="grid grid-cols-2 gap-3 pl-3 border-l-2 border-[var(--c-accent-1)]">
             <Field label="--rope-scale 放大倍数" hint=">1 生效">
               <NumberField
                 value={launch.ropeScale}

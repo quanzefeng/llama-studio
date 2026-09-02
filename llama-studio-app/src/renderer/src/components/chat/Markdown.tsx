@@ -33,13 +33,48 @@ function normalizeDelimiters(md: string): string {
 }
 
 /** pipe 保护:remark-gfm 表格解析会把公式 $...$ 内的裸 | 当作单元格分隔符导致公式被拆散。
- *  这里把 math 区间内未转义的 | 换成 \vert(KaTeX 渲染效果等同 |,但不会触发表格拆分)。 */
+ *  这里把 math 区间内未转义的 | 换成 \vert(KaTeX 渲染效果等同 |,但不会触发表格拆分)。
+ *  必须跳过行内代码/代码块(其中的 $ 和 | 不该进入 math 状态机),且 \vert 后接字母数字时要补空格(\vertx 是未定义命令)。 */
 function protectTablePipes(md: string): string {
   let out = ''
   let i = 0
   let inMath = false
   while (i < md.length) {
     const ch = md[i]
+
+    // ---- 代码块围栏 ``` 或 ~~~(整段跳过)----
+    if (!inMath && (ch === '`' || ch === '~')) {
+      let n = 0
+      while (md[i + n] === ch) n++
+      if (n >= 3) {
+        const close = md.indexOf(ch.repeat(3), i + n)
+        const end = close === -1 ? md.length : close + 3
+        out += md.slice(i, end)
+        i = end
+        continue
+      }
+      // 1~2 个反引号 → 行内代码,整段跳过直到配对
+      let j = i + n
+      let closeAt = -1
+      while (j < md.length) {
+        if (md[j] === ch) {
+          let m = 0
+          while (md[j + m] === ch) m++
+          if (m === n) {
+            closeAt = j
+            break
+          }
+          j += m
+        } else {
+          j++
+        }
+      }
+      const end = closeAt === -1 ? md.length : closeAt + n
+      out += md.slice(i, end)
+      i = end
+      continue
+    }
+
     if (ch === '$') {
       const next = md[i + 1]
       if (!inMath && next === '$') {
@@ -68,6 +103,9 @@ function protectTablePipes(md: string): string {
     if (inMath && ch === '|') {
       if (md[i - 1] !== '\\') {
         out += '\\vert'
+        // \vert 后紧跟字母/数字/反斜杠时需补空格,否则解析成 \vertx 未知命令
+        const next = md[i + 1]
+        if (next && /[a-zA-Z0-9\\]/.test(next)) out += ' '
       } else {
         out += '|'
       }

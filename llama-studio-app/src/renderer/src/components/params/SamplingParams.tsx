@@ -76,7 +76,7 @@ export default function SamplingParams({ sampling, onChange }: Props) {
           </span>
           高级采样
           {advancedActive && (
-            <span className="ml-1 w-1.5 h-1.5 rounded-full bg-emerald-500" />
+            <span className="ml-1 w-1.5 h-1.5 rounded-full c-accent-gradient-bg" />
           )}
         </button>
         {showAdvanced && (

@@ -1,4 +1,4 @@
-// 会话侧边栏 — 新建 / 选择 / 删除
+// 会话侧边栏 — Apple 风格极简导航
 
 import { useStore } from '../../store'
 
@@ -10,34 +10,37 @@ export default function Sidebar() {
   const deleteChat = useStore((s) => s.deleteChat)
 
   return (
-    <aside className="w-56 shrink-0 border-r border-[var(--c-border)] bg-[var(--c-sidebar)] flex flex-col">
-      <div className="p-2">
+    <aside className="w-56 shrink-0 border-r border-[var(--c-border)] flex flex-col" style={{ background: 'var(--c-bg)' }}>
+      <div className="px-3 pt-4 pb-2">
         <button
           onClick={newChat}
-          className="w-full px-2 py-1.5 text-sm rounded bg-emerald-700 hover:bg-emerald-600 text-white"
+          className="w-full flex items-center justify-center gap-2 px-3 py-2 text-[13px] font-medium text-[var(--c-muted)] bg-[var(--c-btn)] hover:bg-[var(--c-btn-hover)] rounded-xl transition-colors"
         >
-          + 新建对话
+          <span className="text-[var(--c-faint)] text-base">＋</span>
+          <span>New Chat</span>
         </button>
       </div>
-      <div className="flex-1 overflow-auto px-1 pb-2 space-y-0.5">
+      <div className="flex-1 overflow-auto px-2 pb-3 space-y-0.5">
         {conversations.length === 0 && (
-          <p className="text-xs text-[var(--c-faint)] px-2 py-1">暂无对话</p>
+          <p className="text-[12px] text-[var(--c-faint)] px-2 py-2">No conversations yet</p>
         )}
         {conversations.map((c) => (
           <div
             key={c.id}
             onClick={() => selectChat(c.id)}
-            className={`group flex items-center gap-1 px-2 py-1.5 rounded text-sm cursor-pointer ${
-              c.id === activeId ? 'bg-[var(--c-btn-hover)]' : 'hover:bg-[var(--c-btn)]'
+            className={`group flex items-center gap-2 px-3 py-2 rounded-lg text-[13px] cursor-pointer transition-colors ${
+              c.id === activeId
+                ? 'bg-[var(--c-btn-hover)] text-[var(--c-text)]'
+                : 'text-[var(--c-muted)] hover:bg-[var(--c-btn)]'
             }`}
           >
-            <span className="flex-1 truncate text-[var(--c-text)]">{c.title || '新对话'}</span>
+            <span className="flex-1 truncate">{c.title || 'New Chat'}</span>
             <button
               onClick={(e) => {
                 e.stopPropagation()
                 deleteChat(c.id)
               }}
-              className="opacity-0 group-hover:opacity-100 text-xs px-1 text-[var(--c-faint)] hover:text-red-400"
+              className="opacity-0 group-hover:opacity-100 text-[var(--c-faint)] hover:text-red-400 transition-opacity"
             >
               ✕
             </button>

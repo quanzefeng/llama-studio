@@ -2,33 +2,74 @@
 @tailwind components;
 @tailwind utilities;
 
-/* 主题色变量 — .theme-dark / .theme-light 切换 */
+/* ============================================================
+   THEME VARIABLES — Modern Soft SaaS Dashboard
+   Light (primary): lavender-white / violet accents
+   Dark (secondary): deep violet-ink
+   ============================================================ */
 :root,
 .theme-dark {
-  --c-bg: #0a0a0a;
-  --c-panel: rgba(24, 24, 27, 0.4);
-  --c-input: #18181b;
-  --c-border: #27272a;
-  --c-text: #f4f4f5;
-  --c-muted: #a1a1aa;
-  --c-faint: #71717a;
-  --c-btn: #27272a;
-  --c-btn-hover: #3f3f46;
-  --c-code: rgba(0, 0, 0, 0.6);
-  --c-sidebar: #0c0c0d;
+  --c-bg: #0d0b17;
+  --c-panel: #1a1728;
+  --c-input: #231f36;
+  --c-border: #2a2740;
+  --c-text: #edecf8;
+  --c-muted: #9895b0;
+  --c-faint: #6d6a82;
+  --c-btn: #252238;
+  --c-btn-hover: #322e4a;
+  --c-code: rgba(0, 0, 0, 0.5);
+  --c-sidebar: #13111e;
+
+  /* accent — violet-only (no cyan) */
+  --c-accent-1: #9d8cff;
+  --c-accent-2: #7c5cff;
+  --c-accent-gradient: linear-gradient(135deg, #7c5cff 0%, #9d8cff 100%);
+  --c-card-bg: #1a1728;
+  --c-card-border: #2a2740;
+  --c-card-shadow: 0 6px 24px rgba(124, 92, 255, 0.06);
+  --c-card-hover-shadow: 0 8px 32px rgba(124, 92, 255, 0.10);
+  --c-focus-ring: 0 0 0 3px rgba(157, 140, 255, 0.20);
+  --c-header-bg: rgba(13, 11, 23, 0.85);
+  --c-header-blur: 8px;
+  --c-bar-bg: rgba(13, 11, 23, 0.85);
+  --c-bar-blur: 8px;
+
+  /* accent for inline elements */
+  --c-accent-text: #b4a8ff;
+  --c-accent-muted: rgba(157, 140, 255, 0.15);
 }
+
 .theme-light {
-  --c-bg: #fafafa;
+  --c-bg: #f5f5f7;
   --c-panel: #ffffff;
   --c-input: #ffffff;
-  --c-border: #e4e4e7;
-  --c-text: #18181b;
-  --c-muted: #52525b;
-  --c-faint: #a1a1aa;
-  --c-btn: #f4f4f5;
-  --c-btn-hover: #e4e4e7;
-  --c-code: #f4f4f5;
-  --c-sidebar: #f4f4f5;
+  --c-border: #e8e8ec;
+  --c-text: #1e1b2e;
+  --c-muted: #6d6a82;
+  --c-faint: #a5a2bd;
+  --c-btn: #f0f0f2;
+  --c-btn-hover: #e5e5e8;
+  --c-code: #f4f4f6;
+  --c-sidebar: #f0f0f2;
+
+  /* accent — pastel violet */
+  --c-accent-1: #7c5cff;
+  --c-accent-2: #8b7cff;
+  --c-accent-gradient: linear-gradient(135deg, #7c5cff 0%, #9d8cff 100%);
+  --c-card-bg: #ffffff;
+  --c-card-border: #e8e8ec;
+  --c-card-shadow: 0 6px 24px rgba(0, 0, 0, 0.05);
+  --c-card-hover-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+  --c-focus-ring: 0 0 0 3px rgba(124, 92, 255, 0.15);
+  --c-header-bg: rgba(255, 255, 255, 0.88);
+  --c-header-blur: 8px;
+  --c-bar-bg: rgba(245, 245, 247, 0.92);
+  --c-bar-blur: 8px;
+
+  /* accent for inline elements */
+  --c-accent-text: #7c5cff;
+  --c-accent-muted: rgba(124, 92, 255, 0.10);
 }
 
 :root {
@@ -41,28 +82,171 @@ body,
   margin: 0;
 }
 body {
-  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text',
+    'Segoe UI Variable Display', 'Segoe UI Variable Text', 'Segoe UI', Inter,
+    'Helvetica Neue', Arial, 'PingFang SC', 'Microsoft YaHei', sans-serif;
   background: var(--c-bg);
   color: var(--c-text);
-  transition: background 0.15s, color 0.15s;
+  letter-spacing: 0;
+  line-height: 1.6;
+  transition: background 0.2s, color 0.2s;
+  position: relative;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* 滚动条 */
+/* ---- Typography: headings ---- */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+}
+
+/* ambient glow — dark-only */
+.theme-dark body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 600px 400px at 15% 20%, rgba(124, 92, 255, 0.05), transparent),
+    radial-gradient(ellipse 500px 350px at 85% 80%, rgba(157, 140, 255, 0.04), transparent);
+}
+.theme-light body::before {
+  content: none;
+}
+
+/* ---- Scrollbar ---- */
 *::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 *::-webkit-scrollbar-thumb {
   background: var(--c-border);
-  border-radius: 4px;
+  border-radius: 3px;
 }
 *::-webkit-scrollbar-track {
   background: transparent;
 }
 
-/* ========================================
-   Markdown body typography (.md-body)
-   ======================================== */
+/* ---- Interactive element transitions ---- */
+input[type="number"],
+input[type="text"],
+input[type="range"],
+select,
+button {
+  transition: border-color 0.18s ease, background-color 0.18s ease, box-shadow 0.18s ease, color 0.18s ease, transform 0.15s ease, opacity 0.15s ease;
+}
+
+/* ============================================================
+   SaaS Card (replaces glass-panel)
+   ============================================================ */
+.glass-panel {
+  background: var(--c-card-bg);
+  border: 1px solid var(--c-card-border);
+  border-radius: 16px;
+  box-shadow: var(--c-card-shadow);
+  transition: box-shadow 0.2s ease;
+}
+.glass-panel:hover {
+  box-shadow: var(--c-card-hover-shadow);
+}
+
+/* ============================================================
+   Accent utilities
+   ============================================================ */
+.c-accent-shadow {
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--c-accent-1) 20%, transparent);
+}
+.c-accent-glow {
+  box-shadow: var(--c-focus-ring);
+}
+
+/* Accent gradient button */
+.btn-accent {
+  background: var(--c-accent-gradient);
+  color: #fff;
+  border: none;
+  box-shadow: 0 2px 8px rgba(124, 92, 255, 0.30);
+}
+.btn-accent:hover {
+  filter: brightness(1.08);
+  box-shadow: 0 4px 12px rgba(124, 92, 255, 0.35);
+}
+
+/* Accent gradient background (Switch, badges, etc.) */
+.c-accent-gradient-bg {
+  background: var(--c-accent-gradient);
+}
+
+/* ============================================================
+   Slider — violet track + white dot thumb (SaaS style)
+   ============================================================ */
+.slider-accent::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #ffffff;
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.06);
+  margin-top: -6px;
+}
+.slider-accent::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #ffffff;
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.06);
+}
+.slider-accent::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 2px;
+  background: linear-gradient(to right, var(--c-accent-1), var(--c-accent-2));
+}
+.slider-accent::-moz-range-track {
+  height: 4px;
+  border-radius: 2px;
+  background: linear-gradient(to right, var(--c-accent-1), var(--c-accent-2));
+}
+.slider-accent {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+}
+.slider-accent:focus {
+  outline: none;
+}
+.slider-accent:focus-visible::-webkit-slider-thumb {
+  box-shadow: 0 0 0 3px rgba(124, 92, 255, 0.25);
+}
+
+/* ============================================================
+   Section heading — clean SaaS kicker style
+   ============================================================ */
+.section-heading {
+  position: relative;
+  padding-left: 10px;
+}
+.section-heading::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 2px;
+  bottom: 2px;
+  width: 3px;
+  border-radius: 2px;
+  background: var(--c-accent-gradient);
+}
+
+/* ============================================================
+   Markdown body typography (.md-body) — inherit theme vars
+   ============================================================ */
 .md-body {
   font-size: 0.925rem;
   line-height: 1.7;
@@ -76,6 +260,7 @@ body {
 .md-body h3,
 .md-body h4 {
   font-weight: 600;
+  letter-spacing: -0.01em;
   margin: 1em 0 0.5em;
   line-height: 1.3;
 }
@@ -101,7 +286,7 @@ body {
 }
 
 .md-body a {
-  color: #60a5fa;
+  color: var(--c-accent-text);
   text-decoration: none;
 }
 .md-body a:hover {
@@ -167,12 +352,10 @@ body {
 
 .md-body img {
   max-width: 100%;
-  border-radius: 6px;
+  border-radius: 8px;
 }
 
-/* ========================================
-   Inline code — theme-aware background
-   ======================================== */
+/* ---- Inline code ---- */
 .md-body :not(pre) > code {
   background: var(--c-code);
   padding: 0.15em 0.4em;
@@ -184,16 +367,14 @@ body {
   background: rgba(255, 255, 255, 0.08);
 }
 .theme-light .md-body :not(pre) > code {
-  background: rgba(0, 0, 0, 0.05);
+  background: rgba(124, 92, 255, 0.06);
 }
 
-/* ========================================
-   Code blocks (pre > code)
-   ======================================== */
+/* ---- Code blocks (pre > code) ---- */
 .md-body pre {
   background: var(--c-code);
   padding: 0.75em 1em;
-  border-radius: 8px;
+  border-radius: 10px;
   overflow-x: auto;
   font-size: 0.875em;
   line-height: 1.6;
@@ -206,9 +387,9 @@ body {
   font-size: 1em;
 }
 
-/* ========================================
-   Highlight.js token colors — dark theme
-   ======================================== */
+/* ============================================================
+   Highlight.js — dark theme (violet-tinted)
+   ============================================================ */
 .theme-dark .md-body .hljs {
   color: var(--c-text);
   background: transparent;
@@ -248,16 +429,16 @@ body {
   color: #7ee787;
 }
 
-/* ========================================
-   Highlight.js token colors — light theme
-   ======================================== */
+/* ============================================================
+   Highlight.js — light theme (violet-tinted)
+   ============================================================ */
 .theme-light .md-body .hljs {
   color: var(--c-text);
   background: transparent;
 }
 .theme-light .md-body .hljs-comment,
 .theme-light .md-body .hljs-meta {
-  color: #6e7781;
+  color: #8b87a0;
 }
 .theme-light .md-body .hljs-keyword {
   color: #cf222e;
@@ -267,7 +448,7 @@ body {
 }
 .theme-light .md-body .hljs-title,
 .theme-light .md-body .hljs-title.function_ {
-  color: #8250df;
+  color: #7c5cff;
 }
 .theme-light .md-body .hljs-number,
 .theme-light .md-body .hljs-literal,
@@ -290,9 +471,9 @@ body {
   color: #116329;
 }
 
-/* ========================================
+/* ============================================================
    KaTeX fixes
-   ======================================== */
+   ============================================================ */
 .md-body .katex {
   color: var(--c-text);
 }
