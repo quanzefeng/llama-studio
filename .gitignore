@@ -1,0 +1,24 @@
+# 第三方引擎(不进仓库,随 Releases 安装包分发;开发者自行下载 llama.cpp)
+llama-b10707-bin-win-cuda-12.4-x64/
+cudart-llama-bin-win-cuda-12.4-x64/
+
+# 依赖与构建产物
+llama-studio-app/node_modules/
+llama-studio-app/out/
+llama-studio-app/dist/
+llama-studio-app/build/
+llama-studio-app/data/
+*.log
+
+# 本机工具痕迹
+.codegraph/
+.omo/
+.smoke-*.mjs
+
+# 运行/构建产物
+*.err
+*.log
+
+# 系统文件
+Thumbs.db
+.DS_Store

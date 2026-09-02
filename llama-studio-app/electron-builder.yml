@@ -1,0 +1,12 @@
+appId: com.llamastudio.app
+productName: Llama Studio
+directories:
+  output: build
+  buildResources: resources
+files:
+  - out/**/*
+  - package.json
+  - "!**/*.{ts,tsx,map}"
+asarUnpack: []
+# 引擎保持外部引用(用户在应用内配置路径),不打包进安装包
+# 如需打包引擎,把两个 bin 目录放进 resources/ 并在此 extraResources 引用
