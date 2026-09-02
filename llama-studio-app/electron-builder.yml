@@ -8,5 +8,11 @@ files:
   - package.json
   - "!**/*.{ts,tsx,map}"
 asarUnpack: []
-# 引擎保持外部引用(用户在应用内配置路径),不打包进安装包
-# 如需打包引擎,把两个 bin 目录放进 resources/ 并在此 extraResources 引用
+# 引擎打进安装包:两个目录从仓库根复制到 resources/engines/{llama,cudart}
+# 本机开发:把引擎目录建 junction/复制为 llama-engine、cudart-engine(见 README)
+# GitHub Actions:workflow 下载引擎后同样放到这两个目录
+extraResources:
+  - from: ../llama-engine
+    to: engines/llama
+  - from: ../cudart-engine
+    to: engines/cudart

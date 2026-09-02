@@ -16,6 +16,7 @@ import {
   defaultServerConfig,
   defaultSampling,
 } from '../shared/defaults'
+import { bundledEngineDirs, isUserEngineValid } from './engine-locator'
 
 const dataDir = join(app.getPath('userData'), 'data')
 const presetsDir = join(dataDir, 'presets')
@@ -28,21 +29,38 @@ function ensure(): void {
 
 export function loadConfig(): ServerConfig {
   ensure()
+  const def = defaultServerConfig()
+  let parsed: ServerConfig | null = null
   try {
     if (existsSync(configPath)) {
-      const parsed = JSON.parse(readFileSync(configPath, 'utf8')) as ServerConfig
-      // 合并默认值,防字段缺失
-      const def = defaultServerConfig()
-      return {
-        launch: { ...def.launch, ...parsed?.launch },
-        engineDir: parsed?.engineDir ?? def.engineDir,
-        cudartDir: parsed?.cudartDir ?? def.cudartDir,
-      }
+      parsed = JSON.parse(readFileSync(configPath, 'utf8')) as ServerConfig
     }
   } catch (e) {
     console.error('[config-store] loadConfig failed', e)
   }
-  return defaultServerConfig()
+
+  // 引擎优先级:用户显式配置(有效) → 打包内置 → 开发默认
+  let engineDir: string
+  let cudartDir: string
+  if (isUserEngineValid(parsed?.engineDir)) {
+    engineDir = parsed!.engineDir
+    cudartDir = parsed?.cudartDir ?? def.cudartDir
+  } else {
+    const bundled = bundledEngineDirs()
+    if (bundled) {
+      engineDir = bundled.engineDir
+      cudartDir = bundled.cudartDir
+    } else {
+      engineDir = def.engineDir
+      cudartDir = def.cudartDir
+    }
+  }
+
+  return {
+    launch: { ...def.launch, ...parsed?.launch },
+    engineDir,
+    cudartDir,
+  }
 }
 
 export function saveConfig(c: ServerConfig): void {

@@ -1,6 +1,9 @@
 # 第三方引擎(不进仓库,随 Releases 安装包分发;开发者自行下载 llama.cpp)
 llama-b10707-bin-win-cuda-12.4-x64/
 cudart-llama-bin-win-cuda-12.4-x64/
+# 打包引擎目录(electron-builder extraResources 读取用;junction/复制到固定名)
+llama-engine/
+cudart-engine/
 
 # 依赖与构建产物
 llama-studio-app/node_modules/

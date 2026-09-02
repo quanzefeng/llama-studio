@@ -1,0 +1,87 @@
+# 构建 + 发布安装包:推送 v* tag 时自动打包 .exe 并上传到 GitHub Releases
+# 引擎来源:llama.cpp 官方 release(CUDA 12.4 x64),与本机开发版本一致可改 LLAMA_BUILD
+
+name: Build & Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch: # 手动触发按钮(不打 tag 也能用来试打包)
+
+permissions:
+  contents: write
+
+env:
+  # llama.cpp 构建版本号:zip 资产名形如 llama-b10707-bin-win-cuda-12.4-x64.zip
+  # 升级引擎只需改这里;发布的安装包会自动内置该版本引擎
+  LLAMA_BUILD: b10707
+  CUDA_VER: 12.4
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: llama-studio-app/package-lock.json
+
+      - name: Install deps
+        working-directory: llama-studio-app
+        run: npm ci
+
+      # ---- 下载并准备引擎(固定目录名,electron-builder extraResources 读取) ----
+      - name: Download llama.cpp binaries
+        run: |
+          curl -L -o llama.zip "https://github.com/ggml-org/llama.cpp/releases/download/${{ env.LLAMA_BUILD }}/llama-${{ env.LLAMA_BUILD }}-bin-win-cuda-${{ env.CUDA_VER }}-x64.zip"
+          tar -xf llama.zip
+          # zip 内是 llama-b10707-bin-win-cuda-12.4-x64/ 目录,统一改名为 llama-engine
+          Get-ChildItem | Where-Object { $_.Name -like 'llama-*-bin-win-cuda-*' -and $_.PSIsContainer } | Rename-Item -NewName 'llama-engine'
+          Remove-Item llama.zip
+
+      - name: Download CUDA runtime (cudart-llama)
+        run: |
+          curl -L -o cudart.zip "https://github.com/ggml-org/llama.cpp/releases/download/${{ env.LLAMA_BUILD }}/cudart-llama-bin-win-cuda-${{ env.CUDA_VER }}-x64.zip"
+          tar -xf cudart.zip
+          Get-ChildItem | Where-Object { $_.Name -like 'cudart-llama-*' -and $_.PSIsContainer } | Rename-Item -NewName 'cudart-engine'
+          Remove-Item cudart.zip
+
+      - name: Verify engine ready
+        run: |
+          if (-not (Test-Path 'llama-engine\llama-server.exe')) { throw 'llama-server.exe missing' }
+          if (-not (Test-Path 'cudart-engine\cudart64_12.dll')) { throw 'cudart64_12.dll missing' }
+          Write-Host "engine dirs OK: llama-engine + cudart-engine"
+
+      # ---- 打包安装包(extraResources 会把引擎打进 resources/engines/) ----
+      - name: Build installer
+        working-directory: llama-studio-app
+        run: npm run build:win
+
+      # ---- 上传产物 + 发布 Release ----
+      - name: Upload to GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        shell: bash
+        run: |
+          gh release create "${GITHUB_REF_NAME}" \
+            llama-studio-app/build/*.exe \
+            --title "Llama Studio ${GITHUB_REF_NAME}" \
+            --notes "内置 llama.cpp ${{ env.LLAMA_BUILD }} (CUDA ${{ env.CUDA_VER }}) 引擎。下载后直接安装,无需另行配置引擎。" \
+            || gh release edit "${GITHUB_REF_NAME}" \
+            llama-studio-app/build/*.exe \
+            --title "Llama Studio ${GITHUB_REF_NAME}"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload artifact (debug)
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: llama-studio-installer
+          path: llama-studio-app/build/*.exe
+          if-no-files-found: error
