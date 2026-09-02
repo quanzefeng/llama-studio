@@ -32,8 +32,9 @@
   --c-focus-ring: 0 0 0 3px rgba(157, 140, 255, 0.20);
   --c-header-bg: rgba(13, 11, 23, 0.85);
   --c-header-blur: 8px;
-  --c-bar-bg: rgba(13, 11, 23, 0.85);
-  --c-bar-blur: 8px;
+  /* 底部操作栏:sticky + 滚动内容时 backdrop-filter 抓不到背景,必须不透明才能完全遮住下方文字 */
+  --c-bar-bg: #0d0b17;
+  --c-bar-blur: 0px;
 
   /* accent for inline elements */
   --c-accent-text: #b4a8ff;
@@ -64,8 +65,9 @@
   --c-focus-ring: 0 0 0 3px rgba(124, 92, 255, 0.15);
   --c-header-bg: rgba(255, 255, 255, 0.88);
   --c-header-blur: 8px;
-  --c-bar-bg: rgba(245, 245, 247, 0.92);
-  --c-bar-blur: 8px;
+  /* 底部操作栏:sticky + 滚动内容时 backdrop-filter 抓不到背景,必须不透明才能完全遮住下方文字 */
+  --c-bar-bg: #f5f5f7;
+  --c-bar-blur: 0px;
 
   /* accent for inline elements */
   --c-accent-text: #7c5cff;

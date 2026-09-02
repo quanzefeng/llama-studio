@@ -204,7 +204,9 @@ export default function ControlPanel() {
   }, [selectedPreset])
 
   return (
-    <div className="h-full overflow-auto p-5 space-y-4">
+    <div className="flex flex-col h-full">
+      {/* 可滚动内容区,pb-3 留出底部栏高度 */}
+      <div className="flex-1 overflow-auto p-5 pb-3 space-y-4">
       {banner && (
         <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm dark:bg-red-950/60 dark:border-red-800 dark:text-red-200">
           {banner}
@@ -370,10 +372,10 @@ export default function ControlPanel() {
           {cmd}
         </pre>
       </section>
-
-      {/* Bottom action bar — light blur + clean */}
-      <div className="flex flex-wrap items-center gap-3 sticky bottom-0 py-3 -mx-5 px-5 border-t border-[var(--c-border)]/40"
-           style={{ background: 'var(--c-bar-bg)', backdropFilter: 'blur(var(--c-bar-blur))', WebkitBackdropFilter: 'blur(var(--c-bar-blur))' }}>
+      </div>
+      {/* Bottom action bar — 不在滚动容器内,直接固定在底部 */}
+      <div className="flex flex-wrap items-center gap-3 py-3 px-5 border-t border-[var(--c-border)]/40"
+           style={{ background: 'var(--c-bar-bg)' }}>
         <button
           onClick={start}
           disabled={busy}
