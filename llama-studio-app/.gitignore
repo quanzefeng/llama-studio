@@ -3,4 +3,5 @@ out/
 build/
 dist/
 *.log
-data/
+# 仅根级运行时数据目录(注意:不带 / 前缀会匹配任意层级,连带排除 src/**/data/)
+/data/
