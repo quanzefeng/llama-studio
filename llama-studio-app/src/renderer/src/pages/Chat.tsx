@@ -336,6 +336,10 @@ export default function Chat() {
 
   /* ── Shared composer — reused in empty & non-empty states ── */
   function renderComposer() {
+    const modelName = config.launch.modelPath
+      ? (config.launch.modelPath.split(/[/\\]/).pop() ?? '')
+      : ''
+
     return (
       <>
         {attachments.length > 0 && (
@@ -351,52 +355,117 @@ export default function Chat() {
             ))}
           </div>
         )}
+
+        {/* 输入框容器 — 上行 textarea,下行工具栏 */}
         <div
-          className="flex items-center gap-3 rounded-[22px] border border-[rgba(0,0,0,0.12)] px-5 py-5 bg-white"
+          className="rounded-[20px] border border-[rgba(0,0,0,0.10)] bg-white overflow-hidden"
           style={{
             boxShadow:
-              '0 8px 28px rgba(0,0,0,0.10), 0 2px 6px rgba(0,0,0,0.06)',
+              '0 4px 24px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04)',
           }}
         >
-          <AddFileButton
-            disabled={!ready || streaming}
-            onAdd={(list) =>
-              setAttachments((prev) => [...prev, ...list])
-            }
-          />
-          <textarea
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={onKeyDown}
-            disabled={!ready}
-            placeholder={ready ? 'Type a message...' : 'Model not ready'}
-            rows={1}
-            className="flex-1 bg-transparent text-[15px] resize-none focus:outline-none text-[var(--c-text)] placeholder:text-[var(--c-muted)] disabled:opacity-50 leading-[1.5] min-h-[32px] py-1"
-          />
-          {config.launch.modelPath && (
-            <span
-              className="text-[var(--c-muted)] text-xs font-medium select-none shrink-0 max-w-[100px] truncate"
-              title={config.launch.modelPath}
-            >
-              {config.launch.modelPath.split(/[/\\]/).pop() ?? ''}
-            </span>
-          )}
-          {streaming ? (
-            <button
-              onClick={stop}
-              className="w-8 h-8 flex items-center justify-center rounded-full bg-red-500 hover:bg-red-400 text-white text-sm shrink-0 transition-colors"
-            >
-              ⏹
-            </button>
-          ) : (
-            <button
-              onClick={send}
-              disabled={!ready || (!input.trim() && attachments.length === 0)}
-              className="w-8 h-8 flex items-center justify-center rounded-full bg-[var(--c-text)] hover:opacity-80 text-white text-sm disabled:opacity-20 shrink-0 transition-all"
-            >
-              ↑
-            </button>
-          )}
+          {/* 上行: textarea */}
+          <div className="px-4 pt-4 pb-0">
+            <textarea
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={onKeyDown}
+              disabled={!ready}
+              placeholder={ready ? 'Type a message...' : 'Model not ready'}
+              rows={1}
+              className="w-full bg-transparent text-[15px] resize-none focus:outline-none text-[var(--c-text)] placeholder:text-[var(--c-muted)] disabled:opacity-50 leading-[1.6] min-h-[28px]"
+            />
+          </div>
+
+          {/* 下行: 工具栏 */}
+          <div className="flex items-center justify-between px-4 pb-3 pt-1">
+            {/* 左侧: 加号按钮 */}
+            <AddFileButton
+              disabled={!ready || streaming}
+              onAdd={(list) =>
+                setAttachments((prev) => [...prev, ...list])
+              }
+              className="w-8 h-8 rounded-full border border-[rgba(0,0,0,0.12)] bg-white hover:bg-[var(--c-btn-hover)]"
+            />
+
+            {/* 右侧: 模型标签 + 灯泡 + 发送按钮 */}
+            <div className="flex items-center gap-2">
+              {/* 立方体图标 + 模型名 */}
+              {modelName && (
+                <span
+                  className="flex items-center gap-1.5 text-[var(--c-muted)] text-xs font-medium select-none"
+                  title={config.launch.modelPath || undefined}
+                >
+                  <svg
+                    width="13"
+                    height="13"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+                    <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
+                    <line x1="12" y1="22.08" x2="12" y2="12" />
+                  </svg>
+                  <span className="max-w-[80px] truncate">{modelName}</span>
+                </span>
+              )}
+
+              {/* 黄色灯泡 */}
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="#f59e0b"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="shrink-0"
+              >
+                <path d="M9 18h6" />
+                <path d="M10 22h4" />
+                <path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5.76.76 1.23 1.52 1.41 2.5" />
+              </svg>
+
+              {streaming ? (
+                <button
+                  onClick={stop}
+                  className="w-8 h-8 flex items-center justify-center rounded-full bg-red-500 hover:bg-red-400 text-white text-sm shrink-0 transition-colors"
+                >
+                  ⏹
+                </button>
+              ) : (
+                <button
+                  onClick={send}
+                  disabled={!ready || (!input.trim() && attachments.length === 0)}
+                  title="Send"
+                  className="w-8 h-8 flex items-center justify-center rounded-full text-white shrink-0 transition-all disabled:opacity-25"
+                  style={{
+                    background: '#404040',
+                    boxShadow: '0 1px 4px rgba(0,0,0,0.2)',
+                  }}
+                >
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <line x1="12" y1="19" x2="12" y2="5" />
+                    <polyline points="5 12 12 5 19 12" />
+                  </svg>
+                </button>
+              )}
+            </div>
+          </div>
         </div>
       </>
     )
