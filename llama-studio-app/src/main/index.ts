@@ -5,6 +5,13 @@ import { stopServer } from './llama-process'
 
 let win: BrowserWindow | null = null
 
+/** 应用图标:开发模式用仓库内 resources/icon.png;打包后窗口自动用 exe 图标 */
+function resolveAppIcon(): string | undefined {
+  if (app.isPackaged) return undefined
+  // electron-vite dev: __dirname = <app>/out/main
+  return join(__dirname, '../../resources/icon.png')
+}
+
 /**
  * 显式设置应用菜单,修复主键盘 Ctrl++(即 Ctrl+Shift+=)无法放大页面的问题。
  * 默认菜单只绑定了 Ctrl+= 与小键盘 +,没有覆盖主键盘加号。
@@ -58,6 +65,7 @@ function createWindow(): void {
     show: false,
     autoHideMenuBar: true,
     backgroundColor: '#0a0a0a',
+    icon: resolveAppIcon(),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       contextIsolation: true,

@@ -3,6 +3,8 @@ productName: Llama Studio
 directories:
   output: build
   buildResources: resources
+win:
+  icon: resources/icon.ico
 files:
   - out/**/*
   - package.json
