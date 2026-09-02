@@ -14,11 +14,11 @@
 - **参数详解**:全参数中文讲解(作用/怎么调/推荐值)
 - **日志**:实时 stdout/stderr
 
-## 安装包(直接使用)
+## 安装(直接使用)
 
-正式版从 [GitHub Releases](https://github.com/quanzefeng/llama-studio/releases) 下载 `.exe` 安装包,引擎已内置,安装即用。
+从 [GitHub Releases](https://github.com/quanzefeng/llama-studio/releases) 下载最新版 `.exe` 安装包,双击安装即可。引擎已内置,安装时可选安装目录,装完就能用,无需任何额外配置。
 
-## 开源版(自行构建)
+## 从源码本地启动
 
 ### 依赖
 
@@ -31,15 +31,18 @@
 ### 步骤
 
 ```powershell
-# 1. 安装依赖
-cd llama-studio-app
+# 1. 克隆仓库
+git clone https://github.com/quanzefeng/llama-studio.git
+cd llama-studio/llama-studio-app
+
+# 2. 安装依赖
 npm install
 
-# 2. 启动开发版
+# 3. 启动开发版
 npm run dev
 ```
 
-打开后在「控制台」填写模型路径与引擎路径,点启动。
+打开后在「控制台」填写模型路径与引擎路径,点启动。若引擎用的是 CUDA 构建,还需在控制台指定 CUDA 运行时的 DLL 目录。
 
 ### 目录结构
 
@@ -47,56 +50,6 @@ npm run dev
 llama-studio-app/       应用源码(Electron + React)
 DESIGN.md               设计文档
 ```
-
-## 构建安装包
-
-```powershell
-cd llama-studio-app
-npm run build:win
-```
-
-安装包会把引擎打进 `resources/engines/`(见 `electron-builder.yml` 的 `extraResources`),产物约 1~2GB。
-
-### 通过 GitHub Actions 自动发布(推荐)
-
-推送 `v*` tag 即自动构建并上传到 Releases,无需本地环境:
-
-```powershell
-git tag v0.1.0
-git push origin v0.1.0
-```
-
-- 工作流:`.github/workflows/release.yml`
-- 引擎版本:工作流顶部 `LLAMA_BUILD` 变量(默认 `b10707`),升级引擎只改这一个值
-- 手动试打包:GitHub 仓库 Actions 页 → 该工作流 → Run workflow(不打 tag 也会出 artifact)
-
-### 打包前:准备引擎目录
-
-`extraResources` 从仓库根的固定目录读取引擎:
-
-```
-llama-engine/       ← llama.cpp bin(llama-server.exe + DLL)
-cudart-engine/      ← CUDA 运行时(cublas64_12.dll / cublasLt64_12.dll / cudart64_12.dll)
-```
-
-本机开发建议用 junction 链接到你已有的引擎目录(无需复制,省 1GB 磁盘):
-
-```powershell
-# 以管理员或开发者模式执行(Windows 10+ 无需管理员建 junction)
-New-Item -ItemType Junction -Path "D:\llama_studio\llama-engine" -Target "D:\llama_studio\llama-b10707-bin-win-cuda-12.4-x64"
-New-Item -ItemType Junction -Path "D:\llama_studio\cudart-engine" -Target "D:\llama_studio\cudart-llama-bin-win-cuda-12.4-x64"
-```
-
-> 这两个目录已被 `.gitignore` 排除,不会进仓库;GitHub Actions 发布时由 workflow 自动下载引擎到同名目录。
-
-### 引擎路径解析(内置 vs 手动)
-
-应用启动时按以下优先级找引擎:
-1. **用户显式配置**的引擎路径(存在 `llama-server.exe` 时优先)
-2. **安装包内置** `resources/engines/`(装完即用,无需配置)
-3. 开发默认路径(仅开发模式)
-
-安装版用户无需任何配置;想用自己的引擎,在配置里显式设置路径即可覆盖内置。
 
 ## License
 
