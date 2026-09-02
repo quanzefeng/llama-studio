@@ -40,8 +40,8 @@ export function defaultLaunchConfig(): LaunchConfig {
 export function defaultServerConfig(): ServerConfig {
   return {
     launch: defaultLaunchConfig(),
-    engineDir: 'D:\\llama_studio\\llama-b10707-bin-win-cuda-12.4-x64',
-    cudartDir: 'D:\\llama_studio\\cudart-llama-bin-win-cuda-12.4-x64',
+    engineDir: 'D:\\llama_studio\\llama-engine',
+    cudartDir: 'D:\\llama_studio\\cudart-engine',
   }
 }
 
