@@ -28,7 +28,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
           cache-dependency-path: llama-studio-app/package-lock.json
 
@@ -36,20 +36,19 @@ jobs:
         working-directory: llama-studio-app
         run: npm ci
 
-      # ---- 下载并准备引擎(固定目录名,electron-builder extraResources 读取) ----
+      # ---- 下载并准备引擎(llama.cpp win zip 为平铺结构,直接解压到固定目录) ----
       - name: Download llama.cpp binaries
         run: |
           curl -L -o llama.zip "https://github.com/ggml-org/llama.cpp/releases/download/${{ env.LLAMA_BUILD }}/llama-${{ env.LLAMA_BUILD }}-bin-win-cuda-${{ env.CUDA_VER }}-x64.zip"
-          tar -xf llama.zip
-          # zip 内是 llama-b10707-bin-win-cuda-12.4-x64/ 目录,统一改名为 llama-engine
-          Get-ChildItem | Where-Object { $_.Name -like 'llama-*-bin-win-cuda-*' -and $_.PSIsContainer } | Rename-Item -NewName 'llama-engine'
+          New-Item -ItemType Directory -Force -Path llama-engine | Out-Null
+          tar -xf llama.zip -C llama-engine
           Remove-Item llama.zip
 
       - name: Download CUDA runtime (cudart-llama)
         run: |
           curl -L -o cudart.zip "https://github.com/ggml-org/llama.cpp/releases/download/${{ env.LLAMA_BUILD }}/cudart-llama-bin-win-cuda-${{ env.CUDA_VER }}-x64.zip"
-          tar -xf cudart.zip
-          Get-ChildItem | Where-Object { $_.Name -like 'cudart-llama-*' -and $_.PSIsContainer } | Rename-Item -NewName 'cudart-engine'
+          New-Item -ItemType Directory -Force -Path cudart-engine | Out-Null
+          tar -xf cudart.zip -C cudart-engine
           Remove-Item cudart.zip
 
       - name: Verify engine ready
@@ -63,18 +62,21 @@ jobs:
         working-directory: llama-studio-app
         run: npm run build:win
 
-      # ---- 上传产物 + 发布 Release ----
+      # ---- 上传产物 + 发布 Release(幂等:create 失败→upload 补资产)----
       - name: Upload to GitHub Release
         if: startsWith(github.ref, 'refs/tags/')
         shell: bash
         run: |
+          # 已存在则跳过创建,否则新建(draft 避免半成品可见)
           gh release create "${GITHUB_REF_NAME}" \
-            llama-studio-app/build/*.exe \
             --title "Llama Studio ${GITHUB_REF_NAME}" \
             --notes "内置 llama.cpp ${{ env.LLAMA_BUILD }} (CUDA ${{ env.CUDA_VER }}) 引擎。下载后直接安装,无需另行配置引擎。" \
-            || gh release edit "${GITHUB_REF_NAME}" \
-            llama-studio-app/build/*.exe \
-            --title "Llama Studio ${GITHUB_REF_NAME}"
+            --generate-notes || true
+          # 上传/覆盖安装包资产(--clobber 支持重跑)
+          gh release upload "${GITHUB_REF_NAME}" llama-studio-app/build/*.exe \
+            --clobber \
+            || true
+          gh release view "${GITHUB_REF_NAME}" --json name,assets --jq '.name + " assets: " + ([.assets[].name] | join(", "))'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
