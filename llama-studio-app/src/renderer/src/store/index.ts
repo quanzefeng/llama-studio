@@ -101,9 +101,13 @@ interface AppState {
   /** 添加用户消息 + 预占一个空 assistant 消息;若无活跃会话则新建;返回写入的会话 id */
   addUserMessage: (content: string, attachments?: Attachment[]) => string
   /** 按 convId 定位会话,用解析后的完整 content/reasoning 覆盖该会话最后一条 assistant 消息(流式增量用) */
-  setActiveAssistant: (convId: string, patch: { content?: string; reasoning?: string }) => void
+  setActiveAssistant: (convId: string, patch: { content?: string; reasoning?: string; tokens?: number; durationMs?: number; tokensPerSec?: number }) => void
   /** 流式结束后落盘 */
   finalizeActive: (convId?: string) => void
+  /** 删除指定会话中的某条消息 */
+  deleteMessage: (convId: string, msgIndex: number) => void
+  /** 在会话末尾追加一条空的 assistant 消息(重新生成用) */
+  appendAssistantPlaceholder: (convId: string) => void
 }
 
 export const useStore = create<AppState>((set, get) => ({
@@ -249,6 +253,9 @@ export const useStore = create<AppState>((set, get) => ({
             ...last,
             content: patch.content ??= last.content,
             reasoning: patch.reasoning ??= last.reasoning,
+            tokens: patch.tokens ?? last.tokens,
+            durationMs: patch.durationMs ?? last.durationMs,
+            tokensPerSec: patch.tokensPerSec ?? last.tokensPerSec,
           }
         }
         return { ...c, messages: msgs }
@@ -261,4 +268,30 @@ export const useStore = create<AppState>((set, get) => ({
     const { conversations } = get()
     persistConversations(conversations)
   },
+
+  deleteMessage: (convId, msgIndex) =>
+    set((s) => {
+      const convs = s.conversations.map((c) => {
+        if (c.id !== convId) return c
+        const msgs = c.messages.filter((_, i) => i !== msgIndex)
+        return { ...c, messages: msgs }
+      })
+      persistConversations(convs)
+      return { conversations: convs }
+    }),
+
+  appendAssistantPlaceholder: (convId) =>
+    set((s) => {
+      const convs = s.conversations.map((c) => {
+        if (c.id !== convId) return c
+        return {
+          ...c,
+          messages: [
+            ...c.messages,
+            { role: 'assistant' as const, content: '', reasoning: '' },
+          ],
+        }
+      })
+      return { conversations: convs }
+    }),
 }))

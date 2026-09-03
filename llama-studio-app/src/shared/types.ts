@@ -115,6 +115,10 @@ export interface ChatMessage {
   reasoning?: string
   /** 附件仅 user 消息携带 */
   attachments?: Attachment[]
+  /** 生成统计(assistant 消息才有) */
+  tokens?: number
+  durationMs?: number
+  tokensPerSec?: number
 }
 
 /** 一个会话 */

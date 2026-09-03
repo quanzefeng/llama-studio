@@ -117,12 +117,44 @@ function parseReasoning(raw: string): { reasoning: string; content: string } {
 }
 
 // 消息行 — Apple iMessage 风格:用户右对齐气泡 / 助手左对齐纯文本
+
+/** 操作按钮(复制/编辑/重新生成/删除) */
+function ActionBtn({
+  title,
+  onClick,
+  className = '',
+  children,
+}: {
+  title: string
+  onClick?: () => void
+  className?: string
+  children: React.ReactNode
+}) {
+  return (
+    <button
+      title={title}
+      onClick={onClick}
+      className={`w-7 h-7 flex items-center justify-center rounded-md text-[var(--c-muted)] hover:text-[var(--c-text)] hover:bg-[var(--c-btn)] transition-colors ${className}`}
+    >
+      {children}
+    </button>
+  )
+}
+
 function MessageRow({
   msg,
   streaming,
+  onCopy,
+  onEdit,
+  onRegenerate,
+  onDelete,
 }: {
   msg: ChatMessage
   streaming?: boolean
+  onCopy?: () => void
+  onEdit?: () => void
+  onRegenerate?: () => void
+  onDelete?: () => void
 }) {
   const isUser = msg.role === 'user'
   const hasReasoning = !!msg.reasoning && msg.reasoning.trim().length > 0
@@ -148,7 +180,7 @@ function MessageRow({
     )
   }
 
-  // 助手消息 — 左对齐,推理块 + Markdown
+  // 助手消息 — 左对齐,推理块 + Markdown + 统计 + 操作按钮
   return (
     <div className="flex justify-start py-3 px-6">
       <div className="max-w-[720px] w-full">
@@ -163,6 +195,52 @@ function MessageRow({
             <span className="whitespace-pre-wrap" aria-hidden>▍</span>
           )}
         </div>
+        {/* 统计行 + 操作按钮(有内容或已有 token 统计即显示;流式中只显示统计,结束后显示操作按钮) */}
+        {(msg.content || msg.tokens != null) && (
+          <div className="flex items-center justify-between mt-1.5 min-h-[28px]">
+            {/* 左侧: 生成统计 */}
+            <div className="flex items-center gap-3 text-[13px] text-[var(--c-muted)] select-none">
+              {msg.tokens != null && (
+                <span>≈ {msg.tokens.toLocaleString()} tokens</span>
+              )}
+              {msg.durationMs != null && (
+                <span>⏱ {(msg.durationMs / 1000).toFixed(1)}s</span>
+              )}
+              {msg.tokensPerSec != null && (
+                <span>⚡ {msg.tokensPerSec.toFixed(2)} t/s</span>
+              )}
+            </div>
+            {/* 右侧: 操作按钮(仅非流式) */}
+            {!streaming && (
+            <div className="flex items-center gap-1">
+              <ActionBtn title="复制" onClick={onCopy}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                </svg>
+              </ActionBtn>
+              <ActionBtn title="编辑" onClick={onEdit}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                </svg>
+              </ActionBtn>
+              <ActionBtn title="重新生成" onClick={onRegenerate}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="23 4 23 10 17 10"/>
+                  <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+                </svg>
+              </ActionBtn>
+              <ActionBtn title="删除" onClick={onDelete} className="hover:text-red-500">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="3 6 5 6 21 6"/>
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                </svg>
+              </ActionBtn>
+            </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   )
@@ -177,6 +255,8 @@ export default function Chat() {
   const addUserMessage = useStore((s) => s.addUserMessage)
   const setActiveAssistant = useStore((s) => s.setActiveAssistant)
   const finalizeActive = useStore((s) => s.finalizeActive)
+  const deleteMessage = useStore((s) => s.deleteMessage)
+  const appendAssistantPlaceholder = useStore((s) => s.appendAssistantPlaceholder)
 
   const [input, setInput] = useState('')
   const [streaming, setStreaming] = useState(false)
@@ -196,25 +276,12 @@ export default function Chat() {
     }
   }, [messages])
 
-  async function send() {
-    const text = input.trim()
-    // 有文本或附件且模型就绪、非流式中,即可发送
-    if ((!text && attachments.length === 0) || !ready || streaming) return
-    setInput('')
-    const sentAtts = attachments
-    setAttachments([])
+  /** 核心发送逻辑:接受显式 history 以支持重新生成(避免闭包过期) */
+  async function sendWith(history: ChatMessage[], text?: string, convId?: string) {
+    const useConvId = convId ?? activeId
+    if (!useConvId || !ready || streaming) return
 
-    // 发给 server 的历史 = 当前消息 + 这条新 user(不含本地预占的空 assistant)
-    const history: ChatMessage[] = [
-      ...messages,
-      { role: 'user', content: text, attachments: sentAtts.length > 0 ? sentAtts : undefined },
-    ]
-    const convId = addUserMessage(text, sentAtts) // store: 加 user + 空 assistant 占位(UI 立刻显示),返回会话 id
-    pinnedRef.current = true
-    // 立即滚底,不等 useEffect 触发
-    requestAnimationFrame(() => {
-      scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'auto' })
-    })
+    const resolvedConvId = useConvId // narrowing: non-null from here on
     setStreaming(true)
 
     const ctrl = new AbortController()
@@ -222,6 +289,8 @@ export default function Chat() {
     let rawBuf = ''
     let reasoningField = ''
     let curContent = ''
+    const startTime = Date.now()
+    let completionTokens = 0
     // --- 节流: 累积到本地变量,周期 flush 到 store ---
     let dirty = false
     let intervalId: ReturnType<typeof setInterval> | null = null
@@ -230,7 +299,19 @@ export default function Chat() {
     function flush() {
       if (stopped || !dirty) return
       dirty = false
-      setActiveAssistant(convId, { content: lastContent, reasoning: lastReasoning || undefined })
+      // 实时统计:chunk 数 ≈ token 数(流式中实时跳动)
+      const elapsed = Date.now() - startTime
+      const tps =
+        completionTokens > 0 && elapsed > 0
+          ? Math.round((completionTokens / (elapsed / 1000)) * 100) / 100
+          : 0
+      setActiveAssistant(resolvedConvId, {
+        content: lastContent,
+        reasoning: lastReasoning || undefined,
+        tokens: completionTokens > 0 ? completionTokens : undefined,
+        durationMs: completionTokens > 0 ? elapsed : undefined,
+        tokensPerSec: tps > 0 ? tps : undefined,
+      })
     }
 
     let lastReasoning = ''
@@ -254,6 +335,7 @@ export default function Chat() {
       let buf = ''
       // eslint-disable-next-line no-constant-condition
       while (true) {
+        if (ctrl.signal.aborted) break // 显式终止:不依赖 read rejection
         const { done, value } = await reader.read()
         if (done) break
         buf += decoder.decode(value, { stream: true })
@@ -270,11 +352,18 @@ export default function Chat() {
           try {
             const json = JSON.parse(data) as {
               choices?: { delta?: { content?: string; reasoning_content?: string } }[]
+              usage?: { completion_tokens?: number }
             }
             const delta = json.choices?.[0]?.delta
             if (delta) {
-              if (delta.content) rawBuf += delta.content
-              if (delta.reasoning_content) reasoningField += delta.reasoning_content
+              if (delta.content) {
+                rawBuf += delta.content
+                completionTokens += 1 // llama.cpp 流式逐 token 发送,每 chunk 计 1
+              }
+              if (delta.reasoning_content) {
+                reasoningField += delta.reasoning_content
+                completionTokens += 1
+              }
               // bug #4: 结构化字段优先,避免标记双重计数
               let reasoning: string | undefined
               let content: string
@@ -291,6 +380,9 @@ export default function Chat() {
               curContent = content
               dirty = true
             }
+            if (json.usage?.completion_tokens) {
+              completionTokens = json.usage.completion_tokens
+            }
           } catch {
             /* 跳过不完整 JSON 分片 */
           }
@@ -305,7 +397,7 @@ export default function Chat() {
       stopped = true
       const err = e as Error
       if (err.name !== 'AbortError') {
-        setActiveAssistant(convId, {
+        setActiveAssistant(resolvedConvId, {
           content: `${curContent}\n\n[错误] ${err.message}`.trim(),
         })
       }
@@ -317,10 +409,42 @@ export default function Chat() {
       }
       flush()
       stopped = true
+      // 写入生成统计
+      const durationMs = Date.now() - startTime
+      const tokensPerSec = completionTokens > 0 && durationMs > 0
+        ? Math.round((completionTokens / (durationMs / 1000)) * 100) / 100
+        : 0
+      setActiveAssistant(resolvedConvId, {
+        content: lastContent,
+        reasoning: lastReasoning || undefined,
+        tokens: completionTokens || undefined,
+        durationMs: completionTokens > 0 ? durationMs : undefined,
+        tokensPerSec: tokensPerSec > 0 ? tokensPerSec : undefined,
+      })
       setStreaming(false)
       abortRef.current = null
-      finalizeActive(convId)
+      finalizeActive(resolvedConvId)
     }
+  }
+
+  /** 正常发送:读 input + attachments,构造 history,调 sendWith */
+  async function send() {
+    const text = input.trim()
+    if ((!text && attachments.length === 0) || !ready || streaming) return
+    setInput('')
+    const sentAtts = attachments
+    setAttachments([])
+
+    const history: ChatMessage[] = [
+      ...messages,
+      { role: 'user', content: text, attachments: sentAtts.length > 0 ? sentAtts : undefined },
+    ]
+    const convId = addUserMessage(text, sentAtts)
+    pinnedRef.current = true
+    requestAnimationFrame(() => {
+      scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'auto' })
+    })
+    await sendWith(history, text, convId)
   }
 
   function stop() {
@@ -509,6 +633,38 @@ export default function Chat() {
                     key={i}
                     msg={m}
                     streaming={streaming && i === messages.length - 1}
+                    onCopy={
+                      m.role === 'assistant'
+                        ? () => navigator.clipboard.writeText(m.content).catch(() => {})
+                        : undefined
+                    }
+                    onEdit={
+                      m.role === 'assistant'
+                        ? () => setInput(m.content)
+                        : undefined
+                    }
+                    onRegenerate={
+                      m.role === 'assistant' && i === messages.length - 1
+                        ? () => {
+                            deleteMessage(activeId!, i)
+                            setTimeout(() => {
+                              const latest = useStore
+                                .getState()
+                                .conversations.find((c) => c.id === activeId)
+                              if (!latest || latest.messages.length === 0) return
+                              // 追加空 assistant 占位,让流式内容有地方落
+                              appendAssistantPlaceholder(activeId!)
+                              // history = 删除后的现存消息(不含占位),并显式传 convId
+                              void sendWith(latest.messages, undefined, activeId!)
+                            }, 50)
+                          }
+                        : undefined
+                    }
+                    onDelete={
+                      m.role === 'assistant'
+                        ? () => deleteMessage(activeId!, i)
+                        : undefined
+                    }
                   />
                 ))}
               </div>
