@@ -1,6 +1,7 @@
 // UI 控件原语 — 用 CSS 变量,自动跟随深/浅主题
 // SaaS dashboard style: clean inputs, violet focus rings, soft shadows
 
+import { useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 
 export function Field({
@@ -38,15 +39,60 @@ export function NumberField({
   step?: number
   disabled?: boolean
 }) {
+  // 本地字符串态:允许空串/前导 0/自由编辑,避免受控 number 输入框"删不掉 0"的问题
+  const [text, setText] = useState<string>(String(value))
+  const focused = useRef(false)
+
+  // 外部 value 变化(预设加载/重置等)→ 未聚焦时同步显示
+  useEffect(() => {
+    if (!focused.current) setText(String(value))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value])
+
+  function commit(raw: string): void {
+    const n = raw.trim() === '' ? 0 : Number(raw)
+    if (Number.isNaN(n)) return
+    onChange(n)
+  }
+
   return (
     <input
-      type="number"
-      value={value}
+      type="text"
+      inputMode="decimal"
+      value={text}
       min={min}
       max={max}
       step={step}
       disabled={disabled}
-      onChange={(e) => onChange(e.target.value === '' ? 0 : Number(e.target.value))}
+      onChange={(e) => {
+        setText(e.target.value)
+        commit(e.target.value)
+      }}
+      onFocus={() => {
+        focused.current = true
+      }}
+      onBlur={() => {
+        focused.current = false
+        // 空→0;非法输入→回退到外部 value;否则规范化显示
+        const raw = text.trim()
+        if (raw === '') {
+          const next = '0'
+          setText(next)
+          onChange(0)
+          return
+        }
+        const n = Number(raw)
+        if (Number.isNaN(n)) {
+          setText(String(value))
+          return
+        }
+        let v = n
+        if (min !== undefined && v < min) v = min
+        if (max !== undefined && v > max) v = max
+        const norm = String(v)
+        if (norm !== text) setText(norm)
+        if (v !== value) onChange(v)
+      }}
       className="bg-[var(--c-input)] border border-[var(--c-border)] rounded-lg px-3 py-1.5 text-sm font-medium tabular-nums focus:outline-none focus:border-[var(--c-accent-1)] focus:c-accent-glow disabled:opacity-40 w-full"
     />
   )
