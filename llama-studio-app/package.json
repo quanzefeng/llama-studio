@@ -1,6 +1,6 @@
 {
   "name": "llama-studio-app",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "llama.cpp GUI Studio — control panel + chat, wraps llama-server.exe",
   "main": "./out/main/index.js",
   "author": "llama-studio",
